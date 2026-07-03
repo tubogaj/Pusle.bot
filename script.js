@@ -141,34 +141,97 @@ function showPreview(file) {
 }
 
 function extractMetrics(rawText) {
-  const text = rawText.replace(/\r/g, "\n");
-  const balance = findMoneyValue(text, "Balance");
-  const closedProfit = findMoneyValue(text, "Profit/Loss");
-  const equity = findMoneyValue(text, "Equity");
-  const growth = findPercentValue(text, "Growth");
+  const lines = normalizeOcrText(rawText);
+  const balance = findMoneyValue(lines, ["balance"]);
+  const closedProfit = findMoneyValue(lines, ["profit/loss", "profit loss", "profitloss", "profit/l0ss", "profit"]);
+  const equity = findMoneyValue(lines, ["equity"], ["equity percentage"]);
+  const growth = findPercentValue(lines, ["growth"]);
+  const missing = [
+    ["Balance", balance],
+    ["Profit/Loss", closedProfit],
+    ["Equity", equity],
+    ["Growth", growth]
+  ].filter(([, value]) => value === null).map(([label]) => label);
 
-  if ([balance, closedProfit, equity, growth].some((value) => value === null)) {
-    throw new Error("Could not read Balance, Profit/Loss, Equity, and Growth from this screenshot.");
+  if (missing.length) {
+    throw new Error(`Could not read ${missing.join(", ")} from this screenshot. Try a sharper crop or brighter screenshot.`);
   }
 
   return { balance, closedProfit, equity, growth };
 }
 
-function findMoneyValue(text, label) {
-  const pattern = new RegExp(`${escapeRegExp(label)}\\s*[:\\-]?\\s*([-+]?\\$?\\s?\\(?[\\d,]+(?:\\.\\d{1,2})?\\)?)`, "i");
-  const match = text.match(pattern);
-  return match ? parseMoney(match[1]) : null;
+function normalizeOcrText(rawText) {
+  return rawText
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/[|]/g, "/").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
 }
 
-function findPercentValue(text, label) {
-  const pattern = new RegExp(`${escapeRegExp(label)}\\s*[:\\-]?\\s*([-+]?\\(?[\\d,]+(?:\\.\\d+)?\\)?\\s?%)`, "i");
-  const match = text.match(pattern);
-  return match ? parseFloat(match[1].replace(/[,%()\s]/g, "")) * (match[1].includes("(") ? -1 : 1) : null;
+function findMoneyValue(lines, labels, excludedLabels = []) {
+  const value = findValueNearLabel(lines, labels, moneyPattern(), excludedLabels);
+  return value ? parseMoney(value) : null;
+}
+
+function findPercentValue(lines, labels, excludedLabels = []) {
+  const value = findValueNearLabel(lines, labels, percentPattern(), excludedLabels);
+  return value ? parsePercent(value) : null;
+}
+
+function findValueNearLabel(lines, labels, valuePattern, excludedLabels = []) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const normalizedLine = normalizeLabel(line);
+
+    if (excludedLabels.some((label) => normalizedLine.includes(normalizeLabel(label)))) {
+      continue;
+    }
+
+    const matchedLabel = labels.find((label) => normalizedLine.includes(normalizeLabel(label)));
+    if (!matchedLabel) continue;
+
+    const sameLineValue = line.slice(normalizedLine.indexOf(normalizeLabel(matchedLabel)) + matchedLabel.length).match(valuePattern);
+    if (sameLineValue) return sameLineValue[0];
+
+    for (let offset = 1; offset <= 4 && index + offset < lines.length; offset += 1) {
+      const nextLine = lines[index + offset];
+      const nextLineValue = nextLine.match(valuePattern);
+      if (nextLineValue) return nextLineValue[0];
+      if (isKnownMetricLabel(nextLine)) break;
+    }
+  }
+
+  return null;
+}
+
+function moneyPattern() {
+  return /[-+]?\(?\$?\s?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?\)?(?:\s?USD)?|[-+]?\(?\$?\s?\d+(?:\.\d{1,2})?\)?(?:\s?USD)?/i;
+}
+
+function percentPattern() {
+  return /[-+]?\(?\d{1,3}(?:,\d{3})*(?:\.\d+)?\)?\s?%/i;
+}
+
+function normalizeLabel(value) {
+  return value.toLowerCase().replace(/[^a-z0-9/%]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function isKnownMetricLabel(value) {
+  const normalized = normalizeLabel(value);
+  return ["growth", "profit/loss", "profit loss", "profitloss", "balance", "equity", "equity percentage"]
+    .some((label) => normalized.includes(normalizeLabel(label)));
 }
 
 function parseMoney(value) {
   const negative = value.includes("(") || value.trim().startsWith("-");
-  const numeric = Number(value.replace(/[$,\s()+-]/g, ""));
+  const numeric = Number(value.replace(/USD/gi, "").replace(/[$,\s()+-]/g, ""));
+  if (Number.isNaN(numeric)) return null;
+  return negative ? -numeric : numeric;
+}
+
+function parsePercent(value) {
+  const negative = value.includes("(") || value.trim().startsWith("-");
+  const numeric = Number(value.replace(/[,%()\s+-]/g, ""));
   if (Number.isNaN(numeric)) return null;
   return negative ? -numeric : numeric;
 }
