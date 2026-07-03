@@ -10,6 +10,8 @@
   --success: #94f3bf;
   --danger: #ff8b8b;
   --shadow: 0 30px 90px rgba(0, 0, 0, 0.58);
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Manrope", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -21,7 +23,9 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
+  font-feature-settings: "ss01" on, "tnum" on, "liga" on;
+  text-rendering: geometricPrecision;
 }
 
 body::after {
@@ -80,22 +84,27 @@ button:disabled {
   margin: 0;
   color: var(--silver);
   font-size: 0.73rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .app-header h1 {
   margin: 8px 0 6px;
-  font-size: clamp(3rem, 7vw, 6.2rem);
-  line-height: 0.95;
-  letter-spacing: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 9vw, 8rem);
+  font-weight: 700;
+  line-height: 0.86;
+  letter-spacing: 0.015em;
+  text-shadow: 0 22px 58px rgba(255, 255, 255, 0.12);
 }
 
 .app-header p:last-child {
   margin: 0;
   color: var(--muted);
   font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .glass-panel {
@@ -132,8 +141,11 @@ button:disabled {
 
 h2 {
   margin: 4px 0 0;
+  font-family: var(--font-display);
   font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 
 .status-pill,
@@ -192,6 +204,16 @@ label span,
 .metrics-grid span {
   color: var(--muted);
   font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upload-empty strong {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .preview-image {
@@ -222,6 +244,7 @@ select {
   padding: 13px 14px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
   outline: none;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -255,7 +278,10 @@ select:focus {
 
 .metrics-grid strong {
   overflow-wrap: anywhere;
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .message {
@@ -284,6 +310,9 @@ select:focus {
   border-radius: 13px;
   padding: 0 16px;
   color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
@@ -332,9 +361,14 @@ td {
 th {
   color: var(--muted);
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+td {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 tbody tr {
@@ -387,8 +421,17 @@ tbody tr {
   overflow-wrap: anywhere;
 }
 
+.summary-toggle strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .summary-toggle span {
   color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-content {
@@ -422,6 +465,16 @@ tbody tr {
 
 .summary-fields span {
   color: var(--muted);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summary-fields strong {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .loading-overlay {
@@ -459,6 +512,11 @@ tbody tr {
 .loader-card p,
 .copy-dialog p {
   color: var(--muted);
+}
+
+.loader-card h2,
+.copy-dialog h2 {
+  font-size: 1.7rem;
 }
 
 .copy-dialog::backdrop {
