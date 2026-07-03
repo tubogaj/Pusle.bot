@@ -117,7 +117,11 @@ async function processScreenshot(file) {
         elements.ocrProgress.textContent = `${titleCase(status)} ${percent}%`;
       }
     });
-
+    
+console.log("========== RAW OCR ==========");
+console.log(result.data.text);
+console.log("=============================");
+    
     state.ocrData = extractMetrics(result.data.text);
     updateMetricPreview();
     elements.ocrStatus.textContent = "OCR complete";
